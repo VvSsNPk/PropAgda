@@ -1,14 +1,17 @@
-module Logic-Agda where
+open import Data.Nat
+module Logic-Agda (n : ℕ) where
   open import Data.Fin using (Fin;zero;suc)
-  open import Data.Nat using (ℕ)
   open import Relation.Binary.PropositionalEquality using (_≡_;refl)
   open import Data.Bool using (Bool; false; true ;not) renaming (_∨_ to _or_ ; _∧_ to _and_)
 
   data Props : Set where
     ⊥ ⊤ : Props
-    patom : {n : ℕ } →  Fin n → Props
+    patom :  Fin n → Props
     ~_ : Props → Props
     _∨_ _∧_ _⇒_ : Props → Props → Props
+
+  _⇔_ : Props → Props → Props
+  p ⇔ q = (p ⇒ q) ∧ (q ⇒ p)
 
 
   data Cxt : ℕ → Set where
@@ -46,6 +49,7 @@ module Logic-Agda where
     ~-i : ∀{I}{Γ : Cxt I}{α β} → Γ ∙ α ⊢ β → Γ ∙ α ⊢ ~ β → Γ ⊢ ~ α
     ⊥-i : ∀{I}{Γ : Cxt I}{α} → Γ ⊢ ~ α → Γ ⊢ α → Γ ⊢ ⊥
     tnd : ∀{I}{Γ : Cxt I}{α} → Γ ⊢ α ∨ ~ α
+    ⇔-intro : ∀{I}{Γ : Cxt I}{α β} → Γ ⊢ α ⇒ β → Γ ⊢ β ⇒ α → Γ ⊢ α ⇔ β
     
     
   infix 5 _⊢_
@@ -65,9 +69,13 @@ module Logic-Agda where
   example3 : {α β : Props} → ø ⊢ α ∧ (α ⇒ β) ⇒ β
   example3 = ⇒-i ( ⇒-e (∧-Eₗ var) (∧-Eᵣ var))
 
-
   Val : Set
-  Val = {n : ℕ} → Fin n → Bool
+  Val =  Fin n → Bool
+
+
+  name : Val
+  name zero = true
+  name (suc x) = true
 
   ∥_∥ : Props → Val → Bool
   ∥ ⊥ ∥ ρ = false
@@ -78,6 +86,10 @@ module Logic-Agda where
   ∥ α ∧ β ∥ ρ = ∥ α ∥ ρ and ∥ β ∥ ρ
   ∥ α ⇒ β ∥ ρ = not (∥ α ∥ ρ) or ∥ β ∥ ρ
 
+  ⟦_⟧ᶜ : {I : ℕ} → Cxt I → Val → Bool
+  ⟦ ø ⟧ᶜ ρ = true 
+  ⟦ Γ ∙ ι ⟧ᶜ ρ = ⟦ Γ ⟧ᶜ ρ and ∥ ι ∥ ρ
+
   example4 : {α β : Props} → ø ⊢ α ⇒ ~ (~ α ∧ β)
   example4 = ⇒-i (~-i (weaken var) (∧-Eᵣ var))
 
@@ -86,3 +98,15 @@ module Logic-Agda where
 
   _ : {α β : Props} → ⟦ ~ α ∧ ~ β ⟧ ⊢ ~ (α ∨ β)
   _ = ~-i (∨-e var var (⊥-e (⊥-i (weaken (weaken (∧-Eₗ var))) var))) (weaken (∧-Eᵣ var))
+
+
+  _⊨_ : {I : ℕ} → Cxt I → Props → Set
+  Γ ⊨ ψ =  ∀  ρ → ⟦ Γ ⟧ᶜ ρ ≡ true → ∥ ψ ∥ ρ ≡ true
+
+  _ : {p q : Props } → ø ⊢ ~ p ⇒ ( p ⇒ q )
+  _  = ⇒-i (⇒-i (⊥-e (⊥-i (weaken var) var))) 
+
+  
+  _ : {p q : Props} → ø ⊢ ( p ⇒ q ) ⇒ (~ q ⇒ ~ p)
+  _ = ⇒-i (⇒-i (~-i (⇒-e (weaken (weaken var)) var) (weaken var)))
+  
