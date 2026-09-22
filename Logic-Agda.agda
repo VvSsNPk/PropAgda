@@ -49,7 +49,7 @@ module Logic-Agda (n : ℕ) where
     ~-i : ∀{I}{Γ : Cxt I}{α β} → Γ ∙ α ⊢ β → Γ ∙ α ⊢ ~ β → Γ ⊢ ~ α
     ⊥-i : ∀{I}{Γ : Cxt I}{α} → Γ ⊢ ~ α → Γ ⊢ α → Γ ⊢ ⊥
     tnd : ∀{I}{Γ : Cxt I}{α} → Γ ⊢ α ∨ ~ α
-    ⇔-intro : ∀{I}{Γ : Cxt I}{α β} → Γ ⊢ α ⇒ β → Γ ⊢ β ⇒ α → Γ ⊢ α ⇔ β
+    -- ⇔-intro : ∀{I}{Γ : Cxt I}{α β} → Γ ⊢ α ⇒ β → Γ ⊢ β ⇒ α → Γ ⊢ α ⇔ β
     
     
   infix 5 _⊢_
@@ -109,4 +109,53 @@ module Logic-Agda (n : ℕ) where
   
   _ : {p q : Props} → ø ⊢ ( p ⇒ q ) ⇒ (~ q ⇒ ~ p)
   _ = ⇒-i (⇒-i (~-i (⇒-e (weaken (weaken var)) var) (weaken var)))
+
+
+  _ : {p q : Props} → ø ⊢ (p ∧ q) ⇒ (q ∧ p)
+  _ = ⇒-i (∧-i (∧-Eₗ var) (∧-Eᵣ var))
+
+  _ : {p q : Props} → ø ⊢ ~ (p ⇒ q) ⇒ p ∧ ~ q
+  _ = ⇒-i (∧-i (∨-e tnd var (⊥-e (⊥-i (weaken var) (⇒-i (⊥-e (⊥-i (weaken var) var)))))) (~-i (⇒-i (weaken var) ) (weaken var)))
+
+
+  _ : {p : Props} → ø ⊢ ~ ~ p ⇒ p
+  _ = ⇒-i (∨-e tnd var (⊥-e (⊥-i (weaken var) var))) 
+
+
+  _ : {p q : Props} → ø ⊢ (p ⇒ q) ∨ (q ⇒ p)
+  _ = ∨-e tnd (∨-iₗ (⇒-i (weaken var))) (∨-iᵣ (⇒-i (⊥-e (⊥-i (weaken var) var))))
+
+  _ : {p q r : Props} → ø ⊢ (p ⇒ (q ⇒ r)) ⇒ ((p ∧ q) ⇒ r)
+  _ = ⇒-i (⇒-i (⇒-e (⇒-e (weaken var) (∧-Eᵣ var)) (∧-Eₗ var)))
+
   
+  
+  
+  -- soundness : ∀ {l} {Γ : Cxt l} {ψ : Props} → Γ ⊢ ψ → Γ ⊨ ψ
+  -- soundness {Γ = Γ ∙ ψ} var ρ _ with ⟦ Γ ⟧ᶜ ρ | ∥ ψ ∥ ρ
+  -- soundness {Γ = Γ ∙ ψ} var ρ _      | true   | true = refl
+  -- soundness {Γ = Γ ∙ ψ} var ρ ()     | true   | false
+  -- soundness {Γ = Γ ∙ ψ} var ρ ()     | false  | _
+
+
+
+
+
+
+
+
+
+  -- soundness {Γ = Γ ∙ ψ} (weaken x) ρ x₁ = {!!}
+  -- soundness ⊤-i ρ x₁ = {!!}
+  -- soundness (⊥-e x) ρ x₁ = {!!}
+  -- soundness (∧-i x x₂) ρ x₁ = {!!}
+  -- soundness (∧-Eₗ x) ρ x₁ = {!!}
+  -- soundness (∧-Eᵣ x) ρ x₁ = {!!}
+  -- soundness (∨-iₗ x) ρ x₁ = {!!}
+  -- soundness (∨-iᵣ x) ρ x₁ = {!!}
+  -- soundness (⇒-i x) ρ x₁ = {!!}
+  -- soundness (⇒-e x x₂) ρ x₁ = {!!}
+  -- soundness (∨-e x x₂ x₃) ρ x₁ = {!!}
+  -- soundness (~-i x x₂) ρ x₁ = {!!}
+  -- soundness (⊥-i x x₂) ρ x₁ = {!!}
+  -- soundness tnd ρ x₁ = {!!}
